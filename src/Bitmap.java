@@ -9,6 +9,10 @@ public class Bitmap
     // Every Pixel components in the image
     private final byte m_components[];
 
+    public int GetWidth(){return m_width; }
+    public int GetHeight(){return m_height; }
+    public byte GetComponent(int index) { return m_components[index]; }
+
     // ARGB(RGBA)를 사용할것임.
     // Create and initialize Bitmap
     /**
@@ -35,6 +39,17 @@ public class Bitmap
         m_components[index + 2] = g;
         m_components[index + 3] = r;
     }
+    public void CopyPixel(int destX, int destY, int srcX, int srcY, Bitmap src)
+    {
+        int destIndex = (destX + destY * m_width) * 4;
+        int srcIndex = (srcX + srcY * src.GetWidth()) * 4;
+        m_components[destIndex    ] = src.GetComponent(srcIndex);
+        m_components[destIndex + 1] = src.GetComponent(srcIndex + 1);
+        m_components[destIndex + 2] = src.GetComponent(srcIndex + 2);
+        m_components[destIndex + 3] = src.GetComponent(srcIndex + 3);
+    }
+
+
     public void CopyToByteArray(byte[] dest)
     {
         for(int i = 0 ; i < m_width * m_height ; i++) {
@@ -44,8 +59,7 @@ public class Bitmap
         }
     }
 
-    public int GetWidth(){return m_width; }
-    public int GetHeight(){return m_height; }
+
 
 /*    public void CopyToIntArray(int[] dest)
     {
