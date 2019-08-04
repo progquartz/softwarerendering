@@ -4,9 +4,9 @@ public class Main {
         Display display = new Display(1000,600,"asdf");
         RenderContext target = (RenderContext) display.GetFrameBuffer();
         Stars3D stars = new Stars3D(4096,64.0f,20.0f);
-        Vertex minYvert = new Vertex(-1,(float)-1.3,0);
-        Vertex midYvert = new Vertex(1,1,0);
-        Vertex maxYvert = new Vertex(1,-1,0);
+        Vertex minYvert = new Vertex(new Vector4f(-1,-1,0, 1),new Vector4f(1.0f, 0.0f, 0.0f, 0.0f));
+        Vertex midYvert = new Vertex(new Vector4f(0,1,0, 1),new Vector4f(0.0f, 1.0f, 0.0f, 0.0f));
+        Vertex maxYvert = new Vertex(new Vector4f(1,-1,0, 1),new Vector4f(0.0f, 0.0f, 1.0f, 0.0f));
 
         Matrix4f projection = new Matrix4f().InitPerspective((float)Math.toRadians(70.f),
                 (float)target.GetWidth()/(float)target.GetHeight(), 0.1f, 1000.0f);
