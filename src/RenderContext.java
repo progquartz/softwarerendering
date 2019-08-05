@@ -5,11 +5,26 @@ public class RenderContext extends Bitmap
         super(width, height);
     }
 
+
+    public void DrawMesh(Mesh mesh, Matrix4f transform , Bitmap texture){
+        for(int i = 0 ; i <  mesh.GetNumIndices(); i+=3){
+            FillTriangle(
+                    mesh.GetVertex(mesh.GetIndex(i)).Transform(transform),
+                    mesh.GetVertex(mesh.GetIndex(i + 1)).Transform(transform),
+                    mesh.GetVertex(mesh.GetIndex(i + 2)).Transform(transform),
+                    texture);
+
+        }
+    }
     public void FillTriangle(Vertex v1 , Vertex v2, Vertex v3, Bitmap texture){
         Matrix4f screenSpaceTransform = new Matrix4f().InitScreenSpaceTransform(GetWidth()/2 , GetHeight()/2);
         Vertex minYvert = v1.Transform(screenSpaceTransform).PerspectiveDivide();
         Vertex midYvert = v2.Transform(screenSpaceTransform).PerspectiveDivide();
         Vertex maxYvert = v3.Transform(screenSpaceTransform).PerspectiveDivide();
+
+        if(minYvert.TriangleAreaTimesTwo(maxYvert,midYvert) >= 0){
+            return ;
+        }
 
         if(maxYvert.GetY() < midYvert.GetY()){
             Vertex temp = maxYvert;

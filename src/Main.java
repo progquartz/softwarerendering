@@ -1,20 +1,13 @@
+import java.io.IOException;
+
 public class Main {
-    public static void main(String[] args){
+    public static void main(String[] args) throws IOException {
         System.out.println("ppap");
         Display display = new Display(1000,600,"asdf");
         RenderContext target = (RenderContext) display.GetFrameBuffer();
-        Bitmap texture = new Bitmap(32, 32);
-        for(int j = 0; j < texture.GetHeight(); j++)
-        {
-            for(int i = 0; i < texture.GetWidth(); i++)
-            {
-                texture.DrawPixel(i, j,
-                        (byte)(Math.random() * 255.0 + 0.5),
-                        (byte)(Math.random() * 255.0 + 0.5),
-                        (byte)(Math.random() * 255.0 + 0.5),
-                        (byte)(Math.random() * 255.0 + 0.5));
-            }
-        }
+
+        Bitmap texture = new Bitmap("./res/simpbricks.png");
+        Mesh mesh = new Mesh("./res/monkey0.obj");
 
         Vertex minYVert = new Vertex(new Vector4f(-1, -1, 0, 1),
                 new Vector4f(0.0f, 0.0f, 0.0f, 0.0f));
@@ -42,9 +35,10 @@ public class Main {
             Matrix4f transform = projection.Mul(translation.Mul(rotation));
 
             target.Clear((byte)0x00);
-            target.FillTriangle(maxYVert.Transform(transform),
-                    midYVert.Transform(transform), minYVert.Transform(transform),
-                    texture);
+            target.DrawMesh(mesh,transform,texture);
+//            target.FillTriangle(maxYVert.Transform(transform),
+//                    midYVert.Transform(transform), minYVert.Transform(transform),
+//                    texture);
 
             display.SwapBuffers();
         }
