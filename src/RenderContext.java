@@ -76,24 +76,27 @@ public class RenderContext extends Bitmap
         int xMax = (int)Math.ceil(right.GetX());
         float xPrestep = xMin - left.GetX();
 
-        float texCoordX = left.GetTexCoordX() + gradients.GetTexCoordXXStep() * xPrestep;
-        float texCoordY = left.GetTexCoordY() + gradients.GetTexCoordYXStep() * xPrestep;
+
+        float xDist = right.GetX() - left.GetX();
+        float texCoordXXStep = (right.GetTexCoordX() - left.GetTexCoordX())/xDist;
+        float texCoordYXStep = (right.GetTexCoordY() - left.GetTexCoordY())/xDist;
+        float oneOverZXStep = (right.GetOneOverZ() - left.GetOneOverZ())/xDist;
+
+        float texCoordX = left.GetTexCoordX() + texCoordXXStep * xPrestep;
+        float texCoordY = left.GetTexCoordY() + texCoordYXStep * xPrestep;
+        float oneOverZ = left.GetOneOverZ() + oneOverZXStep * xPrestep;
         //Vector4f color = left.GetColor().Add(gradients.GetColorXStep().Mul(xPrestep));
 
         for(int i = xMin; i < xMax; i++)
         {
-//            byte r = (byte)(color.GetX() * 255.0f + 0.5f);
-//            byte g = (byte)(color.GetY() * 255.0f + 0.5f);
-//            byte b = (byte)(color.GetZ() * 255.0f + 0.5f);
-//
-//            DrawPixel(i, j, (byte)0xFF, b, g, r);
-
-            int srcX = (int)(texCoordX * ((texture.GetWidth() - 1) + 0.5f));
-            int srcY = (int)(texCoordY * ((texture.GetWidth() - 1) + 0.5f));
+            float z = 1.0f/oneOverZ;
+            int srcX = (int)((texCoordX * z) * ((texture.GetWidth() - 1) + 0.5f));
+            int srcY = (int)((texCoordY * z) * ((texture.GetHeight() - 1) + 0.5f));
 
             CopyPixel(i, j, srcX, srcY, texture);
-            texCoordX += gradients.GetTexCoordXXStep();
-            texCoordY += gradients.GetTexCoordYXStep();
+            oneOverZ += oneOverZXStep;
+            texCoordX += texCoordXXStep;
+            texCoordY += texCoordYXStep;
             //color = color.Add(gradients.GetColorXStep());
         }
     }

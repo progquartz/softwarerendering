@@ -6,6 +6,7 @@ public class Vertex {
     public float GetX(){return m_pos.GetX();}
     public float GetY(){return m_pos.GetY();}
     public Vector4f GetTexCoords() { return m_texCoords; }
+    public Vector4f GetPosition() { return m_pos;}
 
     public Vertex(float x, float y , float z){
         m_pos = new Vector4f(x,y,z,1);
