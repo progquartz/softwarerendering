@@ -3,6 +3,7 @@ public class Gradients
     private float[] m_texCoordX;
     private float[] m_texCoordY;
     private float[] m_oneOverZ;
+    private float[] m_depth;
 
     private float m_texCoordXXStep;
     private float m_texCoordXYStep;
@@ -10,32 +11,42 @@ public class Gradients
     private float m_texCoordYYStep;
     private float m_oneOverZXStep;
     private float m_oneOverZYStep;
+    private float m_depthXStep;
+    private float m_depthYStep;
 
     public float GetTexCoordX(int loc) { return m_texCoordX[loc]; }
     public float GetTexCoordY(int loc) { return m_texCoordY[loc]; }
-    public float GetOneOverZ(int loc) {return m_oneOverZ[loc];}
+    public float GetOneOverZ(int loc) { return m_oneOverZ[loc]; }
+    public float GetDepth(int loc) { return m_depth[loc]; }
 
     public float GetTexCoordXXStep() { return m_texCoordXXStep; }
     public float GetTexCoordXYStep() { return m_texCoordXYStep; }
     public float GetTexCoordYXStep() { return m_texCoordYXStep; }
     public float GetTexCoordYYStep() { return m_texCoordYYStep; }
-    public float GetOneOverZXStep(){return m_oneOverZXStep;}
-    public float GetOneOverZYStep(){return m_oneOverZYStep;}
+    public float GetOneOverZXStep() { return m_oneOverZXStep; }
+    public float GetOneOverZYStep() { return m_oneOverZYStep; }
+    public float GetDepthXStep() { return m_depthXStep; }
+    public float GetDepthYStep() { return m_depthYStep; }
 
     private float CalcXStep(float[] values, Vertex minYVert, Vertex midYVert,
                             Vertex maxYVert, float oneOverdX)
     {
-        return (((values[1] - values[2]) * (minYVert.GetY() - maxYVert.GetY())) -
-               ((values[0] - values[2]) * (midYVert.GetY() - maxYVert.GetY()))) * oneOverdX;
+        return
+                (((values[1] - values[2]) *
+                        (minYVert.GetY() - maxYVert.GetY())) -
+                        ((values[0] - values[2]) *
+                                (midYVert.GetY() - maxYVert.GetY()))) * oneOverdX;
     }
 
     private float CalcYStep(float[] values, Vertex minYVert, Vertex midYVert,
                             Vertex maxYVert, float oneOverdY)
     {
-        return (((values[1] - values[2]) * (minYVert.GetX() - maxYVert.GetX())) -
-               ((values[0] - values[2]) * (midYVert.GetX() - maxYVert.GetX()))) * oneOverdY;
+        return
+                (((values[1] - values[2]) *
+                        (minYVert.GetX() - maxYVert.GetX())) -
+                        ((values[0] - values[2]) *
+                                (midYVert.GetX() - maxYVert.GetX()))) * oneOverdY;
     }
-
 
     public Gradients(Vertex minYVert, Vertex midYVert, Vertex maxYVert)
     {
@@ -50,11 +61,16 @@ public class Gradients
         m_oneOverZ = new float[3];
         m_texCoordX = new float[3];
         m_texCoordY = new float[3];
+        m_depth = new float[3];
+
+        m_depth[0] = minYVert.GetPosition().GetZ();
+        m_depth[1] = midYVert.GetPosition().GetZ();
+        m_depth[2] = maxYVert.GetPosition().GetZ();
 
         // W는 인칭시점을 위한 Z값이고, Z가 가림 개념의 z값이다.
-        m_oneOverZ[0] = 1.0f / minYVert.GetPosition().GetW();
-        m_oneOverZ[1] = 1.0f / midYVert.GetPosition().GetW();
-        m_oneOverZ[2] = 1.0f / maxYVert.GetPosition().GetW();
+        m_oneOverZ[0] = 1.0f/minYVert.GetPosition().GetW();
+        m_oneOverZ[1] = 1.0f/midYVert.GetPosition().GetW();
+        m_oneOverZ[2] = 1.0f/maxYVert.GetPosition().GetW();
 
         m_texCoordX[0] = minYVert.GetTexCoords().GetX() * m_oneOverZ[0];
         m_texCoordX[1] = midYVert.GetTexCoords().GetX() * m_oneOverZ[1];
@@ -70,5 +86,7 @@ public class Gradients
         m_texCoordYYStep = CalcYStep(m_texCoordY, minYVert, midYVert, maxYVert, oneOverdY);
         m_oneOverZXStep = CalcXStep(m_oneOverZ, minYVert, midYVert, maxYVert, oneOverdX);
         m_oneOverZYStep = CalcYStep(m_oneOverZ, minYVert, midYVert, maxYVert, oneOverdY);
+        m_depthXStep = CalcXStep(m_depth, minYVert, midYVert, maxYVert, oneOverdX);
+        m_depthYStep = CalcYStep(m_depth, minYVert, midYVert, maxYVert, oneOverdY);
     }
 }

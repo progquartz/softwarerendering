@@ -6,7 +6,7 @@ public class Main {
         Display display = new Display(1000,600,"asdf");
         RenderContext target = (RenderContext) display.GetFrameBuffer();
 
-        Bitmap texture = new Bitmap("./res/simpbricks.png");
+        Bitmap texture = new Bitmap("./res/monkey_fur.jpg");
         Mesh mesh = new Mesh("./res/monkey0.obj");
 
         Vertex minYVert = new Vertex(new Vector4f(-1, -1, 0, 1),
@@ -30,15 +30,17 @@ public class Main {
             //stars.UpdateAndRender(target, delta);
 
             rotCounter += delta;
-            Matrix4f translation = new Matrix4f().InitTranslation(0.0f, 0.0f, 3.0f);
-            Matrix4f rotation = new Matrix4f().InitRotation(rotCounter, rotCounter, rotCounter);
+            Matrix4f translation = new Matrix4f().InitTranslation(0.0f, 0.0f, 3.0f - 3 * (float)Math.sin(rotCounter));
+            Matrix4f rotation = new Matrix4f().InitRotation(rotCounter, 0.0f, rotCounter);
+            Matrix4f scale = new Matrix4f().InitScale(0.001f, 0.001f, 0.001f);
             Matrix4f transform = projection.Mul(translation.Mul(rotation));
 
             target.Clear((byte)0x00);
-            target.DrawMesh(mesh,transform,texture);
-//            target.FillTriangle(maxYVert.Transform(transform),
-//                    midYVert.Transform(transform), minYVert.Transform(transform),
-//                    texture);
+            target.ClearDepthBuffer();
+            mesh.Draw(target, transform, texture);
+//			target.FillTriangle(maxYVert.Transform(transform),
+//							midYVert.Transform(transform), minYVert.Transform(transform),
+//							texture);
 
             display.SwapBuffers();
         }

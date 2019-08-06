@@ -1,11 +1,52 @@
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+
 public class RenderContext extends Bitmap
 {
+    private float[] m_zBuffer;
 
     public RenderContext(int width, int height){
         super(width, height);
+        m_zBuffer = new float[width*height];
     }
 
+    public void ClearDepthBuffer(){
+        for(int i = 0 ; i < m_zBuffer.length ; i++){
+            m_zBuffer[i] = Float.MAX_VALUE;
+        }
+    }
+    public void DrawTriangle(Vertex v1 , Vertex v2, Vertex v3, Bitmap texture) {
+        List<Vertex> vertices = new ArrayList<>();
+        List<Vertex> auxillaryList = new ArrayList<>();
 
+        vertices.add(v1);
+        vertices.add(v2);
+        vertices.add(v3);
+
+        if(ClipPolygonAxis(vertices,auxillaryList,0) &&
+                ClipPolygonAxis(vertices,auxillaryList,1) &&
+                ClipPolygonAxis(vertices,auxillaryList,2) )
+        {
+            Vertex initialVertex = vertices.get(0);
+
+            for(int i = 0 ; i < vertices.size() -1; i++){
+                FillTriangle(initialVertex,vertices.get(i), vertices.get(i+1), texture);
+            }
+        }
+    }
+        private boolean ClipPolygonAxis(List<Vertex> vertices , List<Vertex> auxillaryList, int componentIndex){
+        ClipPolygonComponent(vertices, componentIndex, 1.0f, auxillaryList);
+        vertices.clear();
+
+        if(auxillaryList.isEmpty()){
+            return false;
+        }
+        ClipPolygonComponent(auxillaryList,componentIndex, -1.0f, vertices);
+        auxillaryList.clear();
+
+        return !vertices.isEmpty();
+    }
     public void DrawMesh(Mesh mesh, Matrix4f transform , Bitmap texture){
         for(int i = 0 ; i <  mesh.GetNumIndices(); i+=3){
             FillTriangle(
@@ -16,7 +57,36 @@ public class RenderContext extends Bitmap
 
         }
     }
-    public void FillTriangle(Vertex v1 , Vertex v2, Vertex v3, Bitmap texture){
+
+    private void ClipPolygonComponent(List<Vertex> vertices, int componentIndex, float componentFactor, List<Vertex> result){
+        Vertex previousVertex = vertices.get(vertices.size() - 1);
+        float previousComponent = previousVertex.Get(componentIndex)* componentFactor;
+        boolean previousInside = previousComponent <= previousVertex.GetPosition().GetW();
+
+        Iterator<Vertex> it = vertices.iterator();
+        while(it.hasNext()){
+            Vertex currentVertex = it.next();
+            float currentComponent = currentVertex.Get(componentIndex)* componentFactor;
+            boolean currentInside = currentComponent <=currentVertex.GetPosition().GetW();
+
+            if(currentInside ^ previousInside){
+                float lerpAmt =
+                        (previousVertex.GetPosition().GetW() - previousComponent) /
+                        ((previousVertex.GetPosition().GetW() - previousComponent) -
+                        (currentVertex.GetPosition().GetW()- currentComponent));
+
+                result.add(previousVertex.Lerp(currentVertex,lerpAmt));
+            }
+            if(currentInside){
+                result.add(currentVertex);
+            }
+            previousVertex = currentVertex;
+            previousComponent = currentComponent;
+            previousInside = currentInside;
+        }
+    }
+
+    private void FillTriangle(Vertex v1 , Vertex v2, Vertex v3, Bitmap texture){
         Matrix4f screenSpaceTransform = new Matrix4f().InitScreenSpaceTransform(GetWidth()/2 , GetHeight()/2);
         Vertex minYvert = v1.Transform(screenSpaceTransform).PerspectiveDivide();
         Vertex midYvert = v2.Transform(screenSpaceTransform).PerspectiveDivide();
@@ -96,22 +166,31 @@ public class RenderContext extends Bitmap
         float texCoordXXStep = (right.GetTexCoordX() - left.GetTexCoordX())/xDist;
         float texCoordYXStep = (right.GetTexCoordY() - left.GetTexCoordY())/xDist;
         float oneOverZXStep = (right.GetOneOverZ() - left.GetOneOverZ())/xDist;
+        float depthXStep = (right.GetDepth() - left.GetDepth())/xDist;
+
 
         float texCoordX = left.GetTexCoordX() + texCoordXXStep * xPrestep;
         float texCoordY = left.GetTexCoordY() + texCoordYXStep * xPrestep;
         float oneOverZ = left.GetOneOverZ() + oneOverZXStep * xPrestep;
+        float depth = left.GetDepth() + depthXStep * xPrestep;
+
         //Vector4f color = left.GetColor().Add(gradients.GetColorXStep().Mul(xPrestep));
 
         for(int i = xMin; i < xMax; i++)
         {
-            float z = 1.0f/oneOverZ;
-            int srcX = (int)((texCoordX * z) * ((texture.GetWidth() - 1) + 0.5f));
-            int srcY = (int)((texCoordY * z) * ((texture.GetHeight() - 1) + 0.5f));
+            int index = i + j * GetWidth();
+            if(depth < m_zBuffer[index]) {
+                m_zBuffer[index] = depth;
+                float z = 1.0f / oneOverZ;
+                int srcX = (int) ((texCoordX * z) * ((texture.GetWidth() - 1) + 0.5f));
+                int srcY = (int) ((texCoordY * z) * ((texture.GetHeight() - 1) + 0.5f));
 
-            CopyPixel(i, j, srcX, srcY, texture);
+                CopyPixel(i, j, srcX, srcY, texture);
+            }
             oneOverZ += oneOverZXStep;
             texCoordX += texCoordXXStep;
             texCoordY += texCoordYXStep;
+            depth += depthXStep;
             //color = color.Add(gradients.GetColorXStep());
         }
     }

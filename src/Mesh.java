@@ -23,4 +23,15 @@ public class Mesh {
         m_indices = model.GetIndices();
 
     }
+    public void Draw(RenderContext context, Matrix4f transform, Bitmap texture)
+    {
+        for(int i = 0; i < m_indices.size(); i += 3)
+        {
+            context.DrawTriangle(
+                    m_Vertices.get(m_indices.get(i)).Transform(transform),
+                    m_Vertices.get(m_indices.get(i + 1)).Transform(transform),
+                    m_Vertices.get(m_indices.get(i + 2)).Transform(transform),
+                    texture);
+        }
+    }
 }
